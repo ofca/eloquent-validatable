@@ -1,0 +1,23 @@
+{
+    "name": "dc/eloquent-validatable",
+    "description": "",
+    "authors": [
+        {
+            "name": "Tomasz <ofca> Zeludziewicz",
+            "email": "tomasz@darkcinnamon.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "4.2.*"
+    },
+    "autoload": {
+        "classmap": [
+            "src/migrations"
+        ],
+        "psr-0": {
+            "DC\\EloquentValidatable\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
