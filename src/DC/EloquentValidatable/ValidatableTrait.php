@@ -55,7 +55,7 @@ trait ValidatableTrait {
         $messages = $validator->getCustomMessages();
         $rules = $validator->getRules();
 
-        if ($additional) {
+        if (is_array($additional)) {
             $data = array_merge($data, array_get($additional, 'data', []));
             $messages = array_merge($messages, array_get($additional, 'messages', []));
             $rules = array_merge($rules, array_get($additional, 'rules', []));
@@ -63,16 +63,13 @@ trait ValidatableTrait {
         
         $validator->setData($data);
         $validator->setCustomMessages($messages);
-        $validator->setRules($this->buildUniqueExclusionRules($rules));
+        $validator->setRules($rules);
 
         if ($validator->fails()) {
             $this->errors = $validator->errors();
 
             if ( ! $silent) {
-                $exception = new Exception;
-                $exception->set($this->errors);
-
-                throw new $exception;
+                throw new Exception('Validation errors occured.', 0, null, $this->errors);
             }
             
             return false;
@@ -85,70 +82,13 @@ trait ValidatableTrait {
     {
         if (is_array($validator)) {
             return Validator::make(
-                array_get($validator, 'data'),
-                array_get($validator, 'rules'),
-                array_get($validator, 'messages')
+                array_get($validator, 'data', []),
+                array_get($validator, 'rules', []),
+                array_get($validator, 'messages', [])
             );
         }
 
         return $validator;
-    }
-
-    /**
-     * When given an ID and a Laravel validation rules array, this function
-     * appends the ID to the 'unique' rules given. The resulting array can
-     * then be fed to a Ardent save so that unchanged values
-     * don't flag a validation issue. Rules can be in either strings
-     * with pipes or arrays, but the returned rules are in arrays.
-     *
-     * @param int   $id
-     * @param array $rules
-     * @return array Rules with exclusions applied
-     * @author https://github.com/laravelbook/ardent/
-     */
-    protected function buildUniqueExclusionRules(array $rules = array()) 
-    {
-        foreach ($rules as $field => &$ruleset) {
-            // If $ruleset is a pipe-separated string, switch it to array
-            $ruleset = (is_string($ruleset))? explode('|', $ruleset) : $ruleset;
-
-            foreach ($ruleset as &$rule) {
-              if (strpos($rule, 'unique') === 0) {
-                // Stop splitting at 4 so final param will hold optional where clause
-                $params = explode(',', $rule, 4); 
-
-                $uniqueRules = array();
-                
-                // Append table name if needed
-                $table = explode(':', $params[0]);
-                if (count($table) == 1)
-                  $uniqueRules[1] = $this->table;
-                else
-                  $uniqueRules[1] = $table[1];
-               
-                // Append field name if needed
-                if (count($params) == 1)
-                  $uniqueRules[2] = $field;
-                else
-                  $uniqueRules[2] = $params[1];
-
-                if (isset($this->primaryKey)) {
-                  $uniqueRules[3] = $this->{$this->primaryKey};
-                  
-                  // If optional where rules are passed, append them otherwise use primary key
-                  $uniqueRules[4] = isset($params[3]) ? $params[3] : $this->primaryKey;
-                }
-                else {
-                  $uniqueRules[3] = $this->id;
-                }
-       
-                $rule = 'unique:' . implode(',', $uniqueRules);  
-              } // end if strpos unique
-              
-            } // end foreach ruleset
-        }
-        
-        return $rules;
     }
 
     /**
@@ -179,5 +119,10 @@ trait ValidatableTrait {
         if ($saved) $this->finishSave($options);
 
         return $saved;
+    }
+
+    public function hasChanged($key)
+    {
+        return $this->getOriginal('name') !== $this->getAttribute('name');
     }
 }
