@@ -3,6 +3,7 @@
 namespace DC\EloquentValidatable;
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\MessageBag;
 
 /**
  * Add validation support for Eloquent models.
@@ -13,19 +14,20 @@ trait ValidatableTrait {
      * Validation errors.
      * @var \Illuminate\Support\MessageBag
      */
-    protected $validationErrors = [];
+    protected $validationErrors;
 
     /**
      * Return instance of validator class or array of validation rules.
      * 
-     * @return \Validator|Array
+     * @return Array
      */
     public function getValidator()
     {
         return [
             'rules'     => [],
             'messages'  => [],
-            'data'      => []
+            'data'      => [],
+            'attributes'=> []
         ];
     }
 
@@ -36,7 +38,7 @@ trait ValidatableTrait {
      */
     public function getValidationErrors()
     {
-        return $this->validationErrors;
+        return $this->validationErrors ?: new MessageBag;
     }
 
     /**
@@ -49,27 +51,20 @@ trait ValidatableTrait {
      */
     public function validate($additional = null, $silent = false)
     {
-        $validator = $this->createValidator($this->getValidator());
+        $validator = $this->getValidator();
 
-        $data = array_merge($this->attributes, $validator->getData() + $validator->getFiles());
-        $messages = $validator->getCustomMessages();
-        $rules = $validator->getRules();
-
-        if (is_array($additional)) {
-            $data = array_merge($data, array_get($additional, 'data', []));
-            $messages = array_merge($messages, array_get($additional, 'messages', []));
-            $rules = array_merge($rules, array_get($additional, 'rules', []));
-        }
+        $data = array_merge($this->attributes, array_get($validator, 'data', []), array_get($additional, 'data', []));
+        $messages = array_merge(array_get($validator, 'messages', []), array_get($additional, 'messages', []));
+        $rules = array_merge(array_get($validator, 'rules', []), array_get($additional, 'rules', []));
+        $attributes = array_merge(array_get($validator, 'attributes', []), array_get($additional, 'attributes', []));
         
-        $validator->setData($data);
-        $validator->setCustomMessages($messages);
-        $validator->setRules($rules);
+        $validator = Validator::make($data, $rules, $messages, $attributes);
 
         if ($validator->fails()) {
-            $this->errors = $validator->errors();
+            $this->validationErrors = $validator->errors();
 
             if ( ! $silent) {
-                throw new Exception('Validation errors occured.', 0, null, $this->errors);
+                throw new Exception('Validation errors occured.', 0, null, $this->validationErrors);
             }
             
             return false;
@@ -123,6 +118,6 @@ trait ValidatableTrait {
 
     public function hasChanged($key)
     {
-        return $this->getOriginal('name') !== $this->getAttribute('name');
+        return $this->getOriginal($key) !== $this->getAttribute($key);
     }
 }
