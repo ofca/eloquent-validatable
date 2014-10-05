@@ -91,7 +91,7 @@ trait ValidatableTrait {
      * 
      * @return bool
      */
-    public function forceSave()
+    public function forceSave(array $options = array())
     {
         $query = $this->newQueryWithoutScopes();
 
