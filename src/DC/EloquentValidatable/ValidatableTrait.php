@@ -86,7 +86,7 @@ trait ValidatableTrait {
     public function forceSave(array $options = array())
     {
         $this->validationIsOn = false;
-        return $this->save();
+        return $this->save($options);
     }
 
     public function isValidationOn()
