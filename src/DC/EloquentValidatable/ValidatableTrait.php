@@ -49,7 +49,7 @@ trait ValidatableTrait {
      * @param array $additional Optional validation data, rules, messages.
      * @param boolean $silent If true, no exception will be thrown if validation fails.
      * @return boolean
-     * @throws \DC\EloquentValidatable\Exception If not valid and $silent is false.
+     * @throws \DC\EloquentValidatable\ValidationException If not valid and $silent is false.
      */
     public function validate($additional = null, $silent = false)
     {
@@ -69,7 +69,7 @@ trait ValidatableTrait {
             $this->validationErrors = $validator->errors();
 
             if ( ! $silent) {
-                throw new Exception('Validation errors occured.', 0, null, $this->validationErrors);
+                throw new ValidationException($this->validationErrors);
             }
             
             return false;
