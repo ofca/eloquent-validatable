@@ -2,6 +2,7 @@
 
 namespace DC\EloquentValidatable;
 
+use \Illuminate\Contracts\Support\MessageProvider;
 
 class ValidationException extends \RuntimeException {
 
