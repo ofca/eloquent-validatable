@@ -68,7 +68,7 @@ trait ValidatableTrait {
 
         if ($sometimes) {
             foreach ($sometimes as $rule) {
-                $validator->sometimes($rule[0], $role[1], $role[2]);
+                $validator->sometimes($rule[0], $rule[1], $rule[2]);
             }
         }
 
