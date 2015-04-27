@@ -60,10 +60,17 @@ trait ValidatableTrait {
         $messages = array_merge(array_get($validator, 'messages', []), array_get($additional, 'messages', []));
         $rules = array_merge(array_get($validator, 'rules', []), array_get($additional, 'rules', []));
         $attributes = array_merge(array_get($validator, 'attributes', []), array_get($additional, 'attributes', []));
+        $sometimes = array_merge(array_get($validator, 'sometimes', []), array_get($additional, 'sometimes', []));
 
         $validator = Facade::getFacadeApplication()
             ->make('validator')
             ->make($data, $rules, $messages, $attributes);
+
+        if ($sometimes) {
+            foreach ($sometimes as $rule) {
+                $validator->sometimes($rule[0], $role[1], $role[2]);
+            }
+        }
 
         if ($validator->fails()) {
             $this->validationErrors = $validator->errors();
